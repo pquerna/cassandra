@@ -217,5 +217,8 @@ service Cassandra {
   // describe specified keyspace
   map<string, map<string, string>> describe_keyspace(1:required string keyspace)
                                    throws (1:NotFoundException nfe),
+
+  // Set the timeout or all operations on this connection. 0 will use the server default.
+  void setopt_timeout(1:i32 milliseconds),
 }
 

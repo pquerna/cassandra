@@ -120,7 +120,7 @@ public class CassandraDaemon
         // ThreadPool Server
         TThreadPoolServer.Options options = new TThreadPoolServer.Options();
         options.minWorkerThreads = 64;
-        serverEngine = new TThreadPoolServer(new TProcessorFactory(processor),
+        serverEngine = new TThreadPoolServer(new CassandraServerFactory(processor),
                                              tServerSocket,
                                              inTransportFactory,
                                              outTransportFactory,

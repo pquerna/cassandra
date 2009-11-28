@@ -82,6 +82,8 @@ public class Cassandra {
 
     public Map<String,Map<String,String>> describe_keyspace(String keyspace) throws NotFoundException, TException;
 
+    public void setopt_timeout(int milliseconds) throws TException;
+
   }
 
   public static class Client implements Iface {
@@ -667,6 +669,36 @@ public class Cassandra {
       throw new TApplicationException(TApplicationException.MISSING_RESULT, "describe_keyspace failed: unknown result");
     }
 
+    public void setopt_timeout(int milliseconds) throws TException
+    {
+      send_setopt_timeout(milliseconds);
+      recv_setopt_timeout();
+    }
+
+    public void send_setopt_timeout(int milliseconds) throws TException
+    {
+      oprot_.writeMessageBegin(new TMessage("setopt_timeout", TMessageType.CALL, seqid_));
+      setopt_timeout_args args = new setopt_timeout_args();
+      args.milliseconds = milliseconds;
+      args.write(oprot_);
+      oprot_.writeMessageEnd();
+      oprot_.getTransport().flush();
+    }
+
+    public void recv_setopt_timeout() throws TException
+    {
+      TMessage msg = iprot_.readMessageBegin();
+      if (msg.type == TMessageType.EXCEPTION) {
+        TApplicationException x = TApplicationException.read(iprot_);
+        iprot_.readMessageEnd();
+        throw x;
+      }
+      setopt_timeout_result result = new setopt_timeout_result();
+      result.read(iprot_);
+      iprot_.readMessageEnd();
+      return;
+    }
+
   }
   public static class Processor implements TProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(Processor.class.getName());
@@ -686,6 +718,7 @@ public class Cassandra {
       processMap_.put("get_string_property", new get_string_property());
       processMap_.put("get_string_list_property", new get_string_list_property());
       processMap_.put("describe_keyspace", new describe_keyspace());
+      processMap_.put("setopt_timeout", new setopt_timeout());
     }
 
     protected static interface ProcessFunction {
@@ -1089,6 +1122,22 @@ public class Cassandra {
           return;
         }
         oprot.writeMessageBegin(new TMessage("describe_keyspace", TMessageType.REPLY, seqid));
+        result.write(oprot);
+        oprot.writeMessageEnd();
+        oprot.getTransport().flush();
+      }
+
+    }
+
+    private class setopt_timeout implements ProcessFunction {
+      public void process(int seqid, TProtocol iprot, TProtocol oprot) throws TException
+      {
+        setopt_timeout_args args = new setopt_timeout_args();
+        args.read(iprot);
+        iprot.readMessageEnd();
+        setopt_timeout_result result = new setopt_timeout_result();
+        iface_.setopt_timeout(args.milliseconds);
+        oprot.writeMessageBegin(new TMessage("setopt_timeout", TMessageType.REPLY, seqid));
         result.write(oprot);
         oprot.writeMessageEnd();
         oprot.getTransport().flush();
@@ -13205,6 +13254,353 @@ public class Cassandra {
         sb.append(this.nfe);
       }
       first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws TException {
+      // check for required fields
+      // check that fields of type enum have valid values
+    }
+
+  }
+
+  public static class setopt_timeout_args implements TBase, java.io.Serializable, Cloneable, Comparable<setopt_timeout_args>   {
+    private static final TStruct STRUCT_DESC = new TStruct("setopt_timeout_args");
+    private static final TField MILLISECONDS_FIELD_DESC = new TField("milliseconds", TType.I32, (short)1);
+
+    public int milliseconds;
+    public static final int MILLISECONDS = 1;
+
+    // isset id assignments
+    private static final int __MILLISECONDS_ISSET_ID = 0;
+    private BitSet __isset_bit_vector = new BitSet(1);
+
+    public static final Map<Integer, FieldMetaData> metaDataMap = Collections.unmodifiableMap(new HashMap<Integer, FieldMetaData>() {{
+      put(MILLISECONDS, new FieldMetaData("milliseconds", TFieldRequirementType.DEFAULT, 
+          new FieldValueMetaData(TType.I32)));
+    }});
+
+    static {
+      FieldMetaData.addStructMetaDataMap(setopt_timeout_args.class, metaDataMap);
+    }
+
+    public setopt_timeout_args() {
+    }
+
+    public setopt_timeout_args(
+      int milliseconds)
+    {
+      this();
+      this.milliseconds = milliseconds;
+      setMillisecondsIsSet(true);
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public setopt_timeout_args(setopt_timeout_args other) {
+      __isset_bit_vector.clear();
+      __isset_bit_vector.or(other.__isset_bit_vector);
+      this.milliseconds = other.milliseconds;
+    }
+
+    public setopt_timeout_args deepCopy() {
+      return new setopt_timeout_args(this);
+    }
+
+    @Deprecated
+    public setopt_timeout_args clone() {
+      return new setopt_timeout_args(this);
+    }
+
+    public int getMilliseconds() {
+      return this.milliseconds;
+    }
+
+    public setopt_timeout_args setMilliseconds(int milliseconds) {
+      this.milliseconds = milliseconds;
+      setMillisecondsIsSet(true);
+      return this;
+    }
+
+    public void unsetMilliseconds() {
+      __isset_bit_vector.clear(__MILLISECONDS_ISSET_ID);
+    }
+
+    // Returns true if field milliseconds is set (has been asigned a value) and false otherwise
+    public boolean isSetMilliseconds() {
+      return __isset_bit_vector.get(__MILLISECONDS_ISSET_ID);
+    }
+
+    public void setMillisecondsIsSet(boolean value) {
+      __isset_bit_vector.set(__MILLISECONDS_ISSET_ID, value);
+    }
+
+    public void setFieldValue(int fieldID, Object value) {
+      switch (fieldID) {
+      case MILLISECONDS:
+        if (value == null) {
+          unsetMilliseconds();
+        } else {
+          setMilliseconds((Integer)value);
+        }
+        break;
+
+      default:
+        throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
+      }
+    }
+
+    public Object getFieldValue(int fieldID) {
+      switch (fieldID) {
+      case MILLISECONDS:
+        return new Integer(getMilliseconds());
+
+      default:
+        throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
+      }
+    }
+
+    // Returns true if field corresponding to fieldID is set (has been asigned a value) and false otherwise
+    public boolean isSet(int fieldID) {
+      switch (fieldID) {
+      case MILLISECONDS:
+        return isSetMilliseconds();
+      default:
+        throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
+      }
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof setopt_timeout_args)
+        return this.equals((setopt_timeout_args)that);
+      return false;
+    }
+
+    public boolean equals(setopt_timeout_args that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_milliseconds = true;
+      boolean that_present_milliseconds = true;
+      if (this_present_milliseconds || that_present_milliseconds) {
+        if (!(this_present_milliseconds && that_present_milliseconds))
+          return false;
+        if (this.milliseconds != that.milliseconds)
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(setopt_timeout_args other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      setopt_timeout_args typedOther = (setopt_timeout_args)other;
+
+      lastComparison = Boolean.valueOf(isSetMilliseconds()).compareTo(isSetMilliseconds());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      lastComparison = TBaseHelper.compareTo(milliseconds, typedOther.milliseconds);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      return 0;
+    }
+
+    public void read(TProtocol iprot) throws TException {
+      TField field;
+      iprot.readStructBegin();
+      while (true)
+      {
+        field = iprot.readFieldBegin();
+        if (field.type == TType.STOP) { 
+          break;
+        }
+        switch (field.id)
+        {
+          case MILLISECONDS:
+            if (field.type == TType.I32) {
+              this.milliseconds = iprot.readI32();
+              setMillisecondsIsSet(true);
+            } else { 
+              TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          default:
+            TProtocolUtil.skip(iprot, field.type);
+            break;
+        }
+        iprot.readFieldEnd();
+      }
+      iprot.readStructEnd();
+
+
+      // check for required fields of primitive type, which can't be checked in the validate method
+      validate();
+    }
+
+    public void write(TProtocol oprot) throws TException {
+      validate();
+
+      oprot.writeStructBegin(STRUCT_DESC);
+      oprot.writeFieldBegin(MILLISECONDS_FIELD_DESC);
+      oprot.writeI32(this.milliseconds);
+      oprot.writeFieldEnd();
+      oprot.writeFieldStop();
+      oprot.writeStructEnd();
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("setopt_timeout_args(");
+      boolean first = true;
+
+      sb.append("milliseconds:");
+      sb.append(this.milliseconds);
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws TException {
+      // check for required fields
+      // check that fields of type enum have valid values
+    }
+
+  }
+
+  public static class setopt_timeout_result implements TBase, java.io.Serializable, Cloneable, Comparable<setopt_timeout_result>   {
+    private static final TStruct STRUCT_DESC = new TStruct("setopt_timeout_result");
+
+    public static final Map<Integer, FieldMetaData> metaDataMap = Collections.unmodifiableMap(new HashMap<Integer, FieldMetaData>() {{
+    }});
+
+    static {
+      FieldMetaData.addStructMetaDataMap(setopt_timeout_result.class, metaDataMap);
+    }
+
+    public setopt_timeout_result() {
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public setopt_timeout_result(setopt_timeout_result other) {
+    }
+
+    public setopt_timeout_result deepCopy() {
+      return new setopt_timeout_result(this);
+    }
+
+    @Deprecated
+    public setopt_timeout_result clone() {
+      return new setopt_timeout_result(this);
+    }
+
+    public void setFieldValue(int fieldID, Object value) {
+      switch (fieldID) {
+      default:
+        throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
+      }
+    }
+
+    public Object getFieldValue(int fieldID) {
+      switch (fieldID) {
+      default:
+        throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
+      }
+    }
+
+    // Returns true if field corresponding to fieldID is set (has been asigned a value) and false otherwise
+    public boolean isSet(int fieldID) {
+      switch (fieldID) {
+      default:
+        throw new IllegalArgumentException("Field " + fieldID + " doesn't exist!");
+      }
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof setopt_timeout_result)
+        return this.equals((setopt_timeout_result)that);
+      return false;
+    }
+
+    public boolean equals(setopt_timeout_result that) {
+      if (that == null)
+        return false;
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(setopt_timeout_result other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      setopt_timeout_result typedOther = (setopt_timeout_result)other;
+
+      return 0;
+    }
+
+    public void read(TProtocol iprot) throws TException {
+      TField field;
+      iprot.readStructBegin();
+      while (true)
+      {
+        field = iprot.readFieldBegin();
+        if (field.type == TType.STOP) { 
+          break;
+        }
+        switch (field.id)
+        {
+          default:
+            TProtocolUtil.skip(iprot, field.type);
+            break;
+        }
+        iprot.readFieldEnd();
+      }
+      iprot.readStructEnd();
+
+
+      // check for required fields of primitive type, which can't be checked in the validate method
+      validate();
+    }
+
+    public void write(TProtocol oprot) throws TException {
+      oprot.writeStructBegin(STRUCT_DESC);
+
+      oprot.writeFieldStop();
+      oprot.writeStructEnd();
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("setopt_timeout_result(");
+      boolean first = true;
+
       sb.append(")");
       return sb.toString();
     }

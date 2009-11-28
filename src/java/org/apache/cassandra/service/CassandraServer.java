@@ -629,5 +629,10 @@ public class CassandraServer implements Cassandra.Iface
         }
     }
 
+    public void setopt_timeout(int localTimeoutMs)
+    {
+        DatabaseDescriptor.setLocalRpcTimeout((long) localTimeoutMs);
+    }
+
     // main method moved to CassandraDaemon
 }

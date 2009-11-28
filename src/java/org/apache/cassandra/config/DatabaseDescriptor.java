@@ -60,6 +60,8 @@ public class DatabaseDescriptor
     private static InetAddress thriftAddress_;
     private static String clusterName_ = "Test";
     private static int replicationFactor_ = 3;
+
+    private static ThreadLocal<Long> local_rpcTimeoutInMillis_ = new ThreadLocal<Long>(){protected Long initialValue() { return (long)0;};};
     private static long rpcTimeoutInMillis_ = 2000;
     private static Set<InetAddress> seeds_ = new HashSet<InetAddress>();
     /* Keeps the list of data file directories */
@@ -649,6 +651,16 @@ public class DatabaseDescriptor
         }
     }
 
+    public static void resetLocalSettings()
+    {
+        local_rpcTimeoutInMillis_.set((long)0);
+    }
+
+    public static void setLocalRpcTimeout(long ms)
+    {
+        local_rpcTimeoutInMillis_.set(ms);
+    }
+
     public static int getGcGraceInSeconds()
     {
         return gcGraceInSeconds_;
@@ -798,6 +810,10 @@ public class DatabaseDescriptor
 
     public static long getRpcTimeout()
     {
+        long t = local_rpcTimeoutInMillis_.get();
+        if (t != 0) {
+          return t;
+        }
         return rpcTimeoutInMillis_;
     }
 
