@@ -94,24 +94,21 @@ public class SSTableWriter extends SSTable
             logger.trace("wrote index of " + decoratedKey + " at " + indexPosition);
     }
 
-    // TODO make this take a DataOutputStream and wrap the byte[] version to combine them
     public void append(DecoratedKey decoratedKey, DataOutputBuffer buffer) throws IOException
     {
-        long currentPosition = beforeAppend(decoratedKey);
-        dataFile.writeUTF(partitioner.convertToDiskFormat(decoratedKey));
-        int length = buffer.getLength();
-        assert length > 0;
-        dataFile.writeInt(length);
-        dataFile.write(buffer.getData(), 0, length);
-        afterAppend(decoratedKey, currentPosition);
+        append(decoratedKey, buffer.getData(), buffer.getLength());
     }
 
     public void append(DecoratedKey decoratedKey, byte[] value) throws IOException
     {
+        append(decoratedKey, value, value.length);
+    }
+    public void append(DecoratedKey decoratedKey, byte[] value, int length) throws IOException
+    {
         long currentPosition = beforeAppend(decoratedKey);
         dataFile.writeUTF(partitioner.convertToDiskFormat(decoratedKey));
-        assert value.length > 0;
-        dataFile.writeInt(value.length);
+        assert length > 0;
+        dataFile.writeInt(length);
         dataFile.write(value);
         afterAppend(decoratedKey, currentPosition);
     }
