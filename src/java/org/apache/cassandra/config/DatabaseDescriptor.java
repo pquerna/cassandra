@@ -50,6 +50,11 @@ public class DatabaseDescriptor
         batch
     };
 
+    public static enum CompressionMethod {
+      none,
+      gzip,
+    };
+  
     public static final String random_ = "RANDOM";
     public static final String ophf_ = "OPHF";
     private static int storagePort_ = 7000;
@@ -123,6 +128,8 @@ public class DatabaseDescriptor
 
     private static boolean snapshotBeforeCompaction_;
     private static boolean autoBootstrap_ = false;
+
+    private static CompressionMethod sstableRowCompression_ = CompressionMethod.none;
 
     static
     {
@@ -272,6 +279,19 @@ public class DatabaseDescriptor
                 bmtThreshold_ = Integer.parseInt(bmtThreshold);
             }
 
+            String ssCompRowRaw = xmlUtils.getNodeValue("/Storage/SSTableRowCompression");
+            if (ssCompRowRaw != null) {
+              try
+              {
+                sstableRowCompression_ = CompressionMethod.valueOf(ssCompRowRaw);
+              }
+              catch (IllegalArgumentException e)
+              {
+                throw new ConfigurationException("SSTableRowCompression must be either 'none' or 'gzip'");
+              }
+            }
+          
+          
             /* TCP port on which the storage system listens */
             String port = xmlUtils.getNodeValue("/Storage/StoragePort");
             if ( port != null )
@@ -994,5 +1014,10 @@ public class DatabaseDescriptor
     public static boolean isAutoBootstrap()
     {
         return autoBootstrap_;
+    }
+  
+    public static CompressionMethod getSSTableRowCompression()
+    {
+        return sstableRowCompression_;
     }
 }

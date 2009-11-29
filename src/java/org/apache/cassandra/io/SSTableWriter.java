@@ -35,6 +35,7 @@ import org.apache.cassandra.dht.IPartitioner;
 import org.apache.cassandra.service.StorageService;
 import org.apache.cassandra.utils.BloomFilter;
 import org.apache.cassandra.config.DatabaseDescriptor;
+import org.apache.cassandra.config.DatabaseDescriptor.CompressionMethod;
 import com.reardencommerce.kernel.collections.shared.evictable.ConcurrentLinkedHashMap;
 
 public class SSTableWriter extends SSTable
@@ -103,13 +104,25 @@ public class SSTableWriter extends SSTable
     {
         append(decoratedKey, value, value.length);
     }
+
     public void append(DecoratedKey decoratedKey, byte[] value, int length) throws IOException
     {
         long currentPosition = beforeAppend(decoratedKey);
         dataFile.writeUTF(partitioner.convertToDiskFormat(decoratedKey));
         assert length > 0;
-        dataFile.writeInt(length);
-        dataFile.write(value);
+        CompressionMethod cm = DatabaseDescriptor.getSSTableRowCompression();
+        if (cm != CompressionMethod.none) {
+          int cmid = SSTableRowCompression.cm2id(cm);
+          DataOutputBuffer ob = SSTableRowCompression.compress(cm, value, length);
+          dataFile.writeInt(cmid);
+          dataFile.writeInt(length);
+          dataFile.writeInt(ob.getLength());
+          dataFile.write(ob.getData());
+        }
+        else {
+          dataFile.writeInt(length);
+          dataFile.write(value);
+        }
         afterAppend(decoratedKey, currentPosition);
     }
 
