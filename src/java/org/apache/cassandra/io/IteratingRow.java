@@ -28,6 +28,7 @@ import org.apache.cassandra.db.DecoratedKey;
 import org.apache.cassandra.db.IColumn;
 import org.apache.cassandra.dht.IPartitioner;
 import org.apache.cassandra.service.StorageService;
+import org.apache.cassandra.config.DatabaseDescriptor.CompressionMethod;
 import com.google.common.collect.AbstractIterator;
 
 public class IteratingRow extends AbstractIterator<IColumn> implements Comparable<IteratingRow>
@@ -37,6 +38,8 @@ public class IteratingRow extends AbstractIterator<IColumn> implements Comparabl
     private final BufferedRandomAccessFile file;
     private SSTableReader sstable;
     private long dataStart;
+    private int expandedSize;
+    private CompressionMethod cm;
     private final IPartitioner partitioner;
 
     public IteratingRow(BufferedRandomAccessFile file, SSTableReader sstable) throws IOException
@@ -47,6 +50,16 @@ public class IteratingRow extends AbstractIterator<IColumn> implements Comparabl
 
         key = partitioner.convertFromDiskFormat(file.readUTF());
         int dataSize = file.readInt();
+
+        if (dataSize < 0) {
+          cm = SSTableRowCompression.id2cm(dataSize);
+          expandedSize = file.readInt();
+          dataSize = file.readInt();
+        }
+        else {
+          cm = CompressionMethod.none;
+        }
+
         dataStart = file.getFilePointer();
         finishedAt = dataStart + dataSize;
     }
@@ -73,10 +86,20 @@ public class IteratingRow extends AbstractIterator<IColumn> implements Comparabl
     // TODO r/m this and make compaction merge columns iteratively for CASSSANDRA-16
     public ColumnFamily getColumnFamily() throws IOException
     {
-        file.seek(dataStart);
-        IndexHelper.skipBloomFilter(file);
-        IndexHelper.skipIndex(file);
-        return ColumnFamily.serializer().deserializeFromSSTable(sstable, file);
+        DataInput r;
+        if (cm != CompressionMethod.none) {
+          r = SSTableRowCompression.decompress(cm,
+                                               file, dataStart,
+                                               finishedAt - dataStart,
+                                               expandedSize);
+        }
+        else {
+          file.seek(dataStart);
+          r = file;
+        }
+        IndexHelper.skipBloomFilter(r);
+        IndexHelper.skipIndex(r);
+        return ColumnFamily.serializer().deserializeFromSSTable(sstable, r);
     }
 
     public void skipRemaining() throws IOException
